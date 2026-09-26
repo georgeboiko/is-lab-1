@@ -1,0 +1,15 @@
+BEGIN;
+
+DROP FUNCTION IF EXISTS copy_ticket_with_discount(INTEGER, DOUBLE PRECISION);
+DROP FUNCTION IF EXISTS sell_ticket(INTEGER, DOUBLE PRECISION, BIGINT);
+DROP FUNCTION IF EXISTS find_tickets_by_venue_greater_than(INTEGER);
+DROP FUNCTION IF EXISTS find_tickets_by_name_prefix(TEXT);
+DROP FUNCTION IF EXISTS get_ticket_with_max_id();
+
+DROP TABLE IF EXISTS tickets;
+DROP TABLE IF EXISTS locations;
+DROP TABLE IF EXISTS persons;
+DROP TABLE IF EXISTS events;
+DROP TABLE IF EXISTS venues;
+
+COMMIT;
