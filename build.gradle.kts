@@ -1,20 +1,20 @@
 plugins {
-    id("java")
+    id("war")
 }
 
 group = "itmo.is"
 version = "1.0-SNAPSHOT"
+
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(17)
+}
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    implementation("jakarta.enterprise:jakarta.enterprise.cdi-api:4.1.0")
-    implementation("org.jboss.weld.se:weld-se-core:6.0.4.Final")
-
-    implementation("jakarta.persistence:jakarta.persistence-api:3.2.0")
-    implementation("org.eclipse.persistence:org.eclipse.persistence.jpa:5.0.1")
+    compileOnly("jakarta.platform:jakarta.jakartaee-web-api:11.0.0")
 
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
@@ -23,4 +23,8 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+tasks.war {
+    archiveFileName = "lab1.war"
 }
