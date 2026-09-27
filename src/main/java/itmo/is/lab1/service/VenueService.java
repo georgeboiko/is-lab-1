@@ -1,6 +1,6 @@
 package itmo.is.lab1.service;
 
-import itmo.is.lab1.dto.VenueRequest;
+import itmo.is.lab1.dto.request.VenueRequest;
 import itmo.is.lab1.model.Venue;
 import itmo.is.lab1.repository.VenueRepository;
 import jakarta.enterprise.context.ApplicationScoped;

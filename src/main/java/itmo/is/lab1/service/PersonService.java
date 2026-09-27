@@ -1,7 +1,7 @@
 package itmo.is.lab1.service;
 
-import itmo.is.lab1.dto.LocationRequest;
-import itmo.is.lab1.dto.PersonRequest;
+import itmo.is.lab1.dto.request.LocationRequest;
+import itmo.is.lab1.dto.request.PersonRequest;
 import itmo.is.lab1.model.Location;
 import itmo.is.lab1.model.Person;
 import itmo.is.lab1.repository.PersonRepository;

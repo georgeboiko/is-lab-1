@@ -1,12 +1,13 @@
 package itmo.is.lab1.service;
 
-import itmo.is.lab1.dto.CoordinatesRequest;
-import itmo.is.lab1.dto.PageResult;
-import itmo.is.lab1.dto.TicketRequest;
+import itmo.is.lab1.dto.request.CoordinatesRequest;
+import itmo.is.lab1.dto.request.TicketRequest;
 import itmo.is.lab1.model.Coordinates;
 import itmo.is.lab1.model.Event;
+import itmo.is.lab1.model.Page;
 import itmo.is.lab1.model.Person;
 import itmo.is.lab1.model.Ticket;
+import itmo.is.lab1.model.TicketReadModel;
 import itmo.is.lab1.model.Venue;
 import itmo.is.lab1.repository.EventRepository;
 import itmo.is.lab1.repository.PersonRepository;
@@ -38,7 +39,7 @@ public class TicketService {
     private VenueRepository venueRepository;
 
     @Transactional
-    public Ticket create(@Valid @NotNull TicketRequest input) {
+    public TicketReadModel create(@Valid @NotNull TicketRequest input) {
         Venue venue = requireVenue(input.venueId());
         Ticket ticket = new Ticket(
                 input.name(),
@@ -49,19 +50,20 @@ public class TicketService {
         );
         applyInput(ticket, input, venue);
         ticketRepository.persist(ticket);
-        return ticket;
+        return toReadModel(ticket);
     }
 
-    public Ticket findById(int id) {
-        return requireTicket(id);
+    public TicketReadModel findById(int id) {
+        return requireTicketReadModel(id);
     }
 
-    public PageResult<Ticket> findPage(int page, int size, String nameFilter,
-                                       boolean ascending) {
+    public Page<TicketReadModel> findPage(int page, int size, String nameFilter,
+                                        boolean ascending) {
         validatePage(page, size);
         int offset = Math.multiplyExact(page, size);
-        return new PageResult<>(
-                ticketRepository.findPage(offset, size, nameFilter, ascending),
+        return new Page<>(
+                ticketRepository.findReadModelPage(
+                        offset, size, nameFilter, ascending),
                 ticketRepository.count(nameFilter),
                 page,
                 size
@@ -69,27 +71,27 @@ public class TicketService {
     }
 
     @Transactional
-    public Ticket update(int id, @Valid @NotNull TicketRequest input) {
-        Ticket ticket = requireTicket(id);
+    public TicketReadModel update(int id, @Valid @NotNull TicketRequest input) {
+        Ticket ticket = requireTicketEntity(id);
         Venue venue = requireVenue(input.venueId());
         applyInput(ticket, input, venue);
-        return ticket;
+        return toReadModel(ticket);
     }
 
     @Transactional
     public void delete(int id) {
-        ticketRepository.remove(requireTicket(id));
+        ticketRepository.remove(requireTicketEntity(id));
     }
 
-    public Optional<Ticket> findWithMaxId() {
+    public Optional<TicketReadModel> findWithMaxId() {
         return ticketRepository.findWithMaxId();
     }
 
-    public List<Ticket> findByNamePrefix(String prefix) {
+    public List<TicketReadModel> findByNamePrefix(String prefix) {
         return ticketRepository.findByNamePrefix(prefix);
     }
 
-    public List<Ticket> findByVenueCapacityGreaterThan(int capacity) {
+    public List<TicketReadModel> findByVenueCapacityGreaterThan(int capacity) {
         if (capacity < 0) {
             throw new IllegalArgumentException("Venue capacity must not be negative");
         }
@@ -97,7 +99,7 @@ public class TicketService {
     }
 
     @Transactional
-    public Ticket sell(int ticketId, double amount, long personId) {
+    public TicketReadModel sell(int ticketId, double amount, long personId) {
         if (amount <= 0) {
             throw new IllegalArgumentException("Sale amount must be greater than zero");
         }
@@ -107,13 +109,13 @@ public class TicketService {
     }
 
     @Transactional
-    public Ticket copyWithDiscount(int ticketId, double discount) {
+    public TicketReadModel copyWithDiscount(int ticketId, double discount) {
         if (discount <= 0 || discount > 100) {
             throw new IllegalArgumentException(
                     "Discount must be greater than zero and at most 100");
         }
 
-        Ticket source = requireTicket(ticketId);
+        Ticket source = requireTicketEntity(ticketId);
         if (source.getPrice() == null) {
             throw new IllegalStateException(
                     "Ticket with id " + ticketId + " has no price");
@@ -140,8 +142,66 @@ public class TicketService {
         return new Coordinates(coordinates.x(), coordinates.y());
     }
 
-    private Ticket requireTicket(int id) {
-        return ticketRepository.findById(id)
+    private TicketReadModel toReadModel(Ticket ticket) {
+        Person person = ticket.getPerson();
+        Event event = ticket.getEvent();
+        Venue venue = ticket.getVenue();
+
+        TicketReadModel.PersonDetails personDetails = person == null
+                ? null
+                : new TicketReadModel.PersonDetails(
+                        person.getId(),
+                        person.getEyeColor(),
+                        person.getHairColor(),
+                        person.getLocation() == null
+                                ? null
+                                : new TicketReadModel.LocationDetails(
+                                        person.getLocation().getX(),
+                                        person.getLocation().getY(),
+                                        person.getLocation().getZ(),
+                                        person.getLocation().getName()
+                                ),
+                        person.getHeight(),
+                        person.getNationality()
+                );
+
+        TicketReadModel.EventDetails eventDetails = event == null
+                ? null
+                : new TicketReadModel.EventDetails(
+                        event.getId(),
+                        event.getName(),
+                        event.getDate(),
+                        event.getMinAge(),
+                        event.getTicketsCount(),
+                        event.getDescription()
+                );
+
+        return new TicketReadModel(
+                ticket.getId(),
+                ticket.getName(),
+                new TicketReadModel.CoordinatesDetails(
+                        ticket.getCoordinates().getX(),
+                        ticket.getCoordinates().getY()),
+                ticket.getCreationDate(),
+                personDetails,
+                eventDetails,
+                ticket.getPrice(),
+                ticket.getType(),
+                ticket.getDiscount(),
+                ticket.getNumber(),
+                new TicketReadModel.VenueDetails(
+                        venue.getId(), venue.getName(),
+                        venue.getCapacity(), venue.getType())
+        );
+    }
+
+    private Ticket requireTicketEntity(int id) {
+        return ticketRepository.findEntityById(id)
+                .orElseThrow(() -> ticketNotFound(id));
+    }
+
+    private TicketReadModel requireTicketReadModel(int id) {
+        return ticketRepository.findReadModelById(id)
                 .orElseThrow(() -> ticketNotFound(id));
     }
 

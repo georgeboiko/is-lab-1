@@ -1,6 +1,8 @@
 package itmo.is.lab1.model;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.ColumnResult;
+import jakarta.persistence.ConstructorResult;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -11,6 +13,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.SqlResultSetMapping;
 import jakarta.persistence.Table;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMax;
@@ -22,10 +25,48 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
+import itmo.is.lab1.repository.projection.TicketReadRow;
+
 import java.time.LocalDate;
 
 @Entity
 @Table(name = "tickets")
+@SqlResultSetMapping(
+        name = "TicketReadRowMapping",
+        classes = @ConstructorResult(
+                targetClass = TicketReadRow.class,
+                columns = {
+                        @ColumnResult(name = "ticket_id", type = Integer.class),
+                        @ColumnResult(name = "ticket_name", type = String.class),
+                        @ColumnResult(name = "coordinates_x", type = Integer.class),
+                        @ColumnResult(name = "coordinates_y", type = Long.class),
+                        @ColumnResult(name = "creation_date", type = java.sql.Date.class),
+                        @ColumnResult(name = "price", type = Double.class),
+                        @ColumnResult(name = "ticket_type", type = String.class),
+                        @ColumnResult(name = "discount", type = Double.class),
+                        @ColumnResult(name = "number", type = Integer.class),
+                        @ColumnResult(name = "person_id", type = Long.class),
+                        @ColumnResult(name = "eye_color", type = String.class),
+                        @ColumnResult(name = "hair_color", type = String.class),
+                        @ColumnResult(name = "height", type = Integer.class),
+                        @ColumnResult(name = "nationality", type = String.class),
+                        @ColumnResult(name = "location_x", type = Double.class),
+                        @ColumnResult(name = "location_y", type = Integer.class),
+                        @ColumnResult(name = "location_z", type = Long.class),
+                        @ColumnResult(name = "location_name", type = String.class),
+                        @ColumnResult(name = "event_id", type = Long.class),
+                        @ColumnResult(name = "event_name", type = String.class),
+                        @ColumnResult(name = "event_date", type = java.sql.Timestamp.class),
+                        @ColumnResult(name = "min_age", type = Long.class),
+                        @ColumnResult(name = "tickets_count", type = Integer.class),
+                        @ColumnResult(name = "event_description", type = String.class),
+                        @ColumnResult(name = "venue_id", type = Long.class),
+                        @ColumnResult(name = "venue_name", type = String.class),
+                        @ColumnResult(name = "venue_capacity", type = Integer.class),
+                        @ColumnResult(name = "venue_type", type = String.class)
+                }
+        )
+)
 @Getter
 @Setter
 public class Ticket {

@@ -1,6 +1,8 @@
 package itmo.is.lab1.repository;
 
 import itmo.is.lab1.model.Ticket;
+import itmo.is.lab1.model.TicketReadModel;
+import itmo.is.lab1.repository.projection.TicketReadRow;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -14,13 +16,41 @@ import java.util.Optional;
 @ApplicationScoped
 public class TicketRepository {
 
-    private static final String SELECT_WITH_RELATIONS = """
-            SELECT t
-            FROM Ticket t
-            LEFT JOIN FETCH t.person p
-            LEFT JOIN FETCH p.location
-            LEFT JOIN FETCH t.event
-            JOIN FETCH t.venue
+    private static final String TICKET_READ_MODEL_SELECT = """
+            SELECT
+                t.id AS ticket_id,
+                t.name AS ticket_name,
+                t.coordinates_x AS coordinates_x,
+                t.coordinates_y AS coordinates_y,
+                t.creation_date AS creation_date,
+                t.price AS price,
+                t.type AS ticket_type,
+                t.discount AS discount,
+                t.number AS number,
+                p.id AS person_id,
+                p.eye_color AS eye_color,
+                p.hair_color AS hair_color,
+                p.height AS height,
+                p.nationality AS nationality,
+                l.x AS location_x,
+                l.y AS location_y,
+                l.z AS location_z,
+                l.name AS location_name,
+                e.id AS event_id,
+                e.name AS event_name,
+                e.event_date AS event_date,
+                e.min_age AS min_age,
+                e.tickets_count AS tickets_count,
+                e.description AS event_description,
+                v.id AS venue_id,
+                v.name AS venue_name,
+                v.capacity AS venue_capacity,
+                v.type AS venue_type
+            FROM %s AS t
+            LEFT JOIN persons p ON p.id = t.person_id
+            LEFT JOIN locations l ON l.person_id = p.id
+            LEFT JOIN events e ON e.id = t.event_id
+            JOIN venues v ON v.id = t.venue_id
             """;
 
     @PersistenceContext(unitName = "lab1")
@@ -32,30 +62,33 @@ public class TicketRepository {
         entityManager.refresh(ticket);
     }
 
-    public Optional<Ticket> findById(int id) {
-        return entityManager.createQuery(
-                        SELECT_WITH_RELATIONS + " WHERE t.id = :id", Ticket.class)
-                .setParameter("id", id)
-                .getResultStream()
-                .findFirst();
+    public Optional<Ticket> findEntityById(int id) {
+        return Optional.ofNullable(entityManager.find(Ticket.class, id));
     }
 
-    public List<Ticket> findPage(int offset, int limit, String nameFilter,
-                                 boolean ascending) {
+    public Optional<TicketReadModel> findReadModelById(int id) {
+        Query query = ticketReadModelQuery("tickets", " WHERE t.id = ?1");
+        query.setParameter(1, id);
+        return ticketReadModels(query).stream().findFirst();
+    }
+
+    public List<TicketReadModel> findReadModelPage(
+            int offset, int limit, String nameFilter, boolean ascending) {
         String filter = normalizeFilter(nameFilter);
-        String queryText = SELECT_WITH_RELATIONS
-                + (filter == null ? "" : " WHERE LOWER(t.name) LIKE :filter")
+        String suffix = (filter == null
+                ? ""
+                : " WHERE LOWER(t.name) LIKE ?1")
                 + " ORDER BY t.name " + (ascending ? "ASC" : "DESC") + ", t.id ASC";
 
-        TypedQuery<Ticket> query = entityManager.createQuery(queryText, Ticket.class)
+        Query query = ticketReadModelQuery("tickets", suffix)
                 .setFirstResult(offset)
                 .setMaxResults(limit);
 
         if (filter != null) {
-            query.setParameter("filter", filter);
+            query.setParameter(1, filter);
         }
 
-        return query.getResultList();
+        return ticketReadModels(query);
     }
 
     public long count(String nameFilter) {
@@ -75,49 +108,41 @@ public class TicketRepository {
         entityManager.remove(ticket);
     }
 
-    public Optional<Ticket> findWithMaxId() {
-        return singleTicket(entityManager.createNativeQuery("""
-                SELECT result.*
-                FROM get_ticket_with_max_id() AS result
-                WHERE result.id IS NOT NULL
-                """, Ticket.class));
+    public Optional<TicketReadModel> findWithMaxId() {
+        Query query = ticketReadModelQuery(
+                "get_ticket_with_max_id()", " ORDER BY t.id");
+        return ticketReadModels(query).stream().findFirst();
     }
 
-    public List<Ticket> findByNamePrefix(String prefix) {
-        Query query = entityManager.createNativeQuery(
-                "SELECT * FROM find_tickets_by_name_prefix(?1)", Ticket.class);
+    public List<TicketReadModel> findByNamePrefix(String prefix) {
+        Query query = ticketReadModelQuery(
+                "find_tickets_by_name_prefix(?1)", " ORDER BY t.id");
         query.setParameter(1, prefix);
-        return ticketList(query);
+        return ticketReadModels(query);
     }
 
-    public List<Ticket> findByVenueCapacityGreaterThan(int capacity) {
-        Query query = entityManager.createNativeQuery(
-                "SELECT * FROM find_tickets_by_venue_greater_than(?1)", Ticket.class);
+    public List<TicketReadModel> findByVenueCapacityGreaterThan(int capacity) {
+        Query query = ticketReadModelQuery(
+                "find_tickets_by_venue_greater_than(?1)", " ORDER BY t.id");
         query.setParameter(1, capacity);
-        return ticketList(query);
+        return ticketReadModels(query);
     }
 
-    public Optional<Ticket> sell(int ticketId, double amount, long personId) {
-        Query query = entityManager.createNativeQuery("""
-                SELECT result.*
-                FROM sell_ticket(?1, ?2, ?3) AS result
-                WHERE result.id IS NOT NULL
-                """, Ticket.class);
+    public Optional<TicketReadModel> sell(int ticketId, double amount, long personId) {
+        Query query = ticketReadModelQuery(
+                "sell_ticket(?1, ?2, ?3)", " ORDER BY t.id");
         query.setParameter(1, ticketId);
         query.setParameter(2, amount);
         query.setParameter(3, personId);
-        return singleTicket(query);
+        return ticketReadModels(query).stream().findFirst();
     }
 
-    public Optional<Ticket> copyWithDiscount(int ticketId, double discount) {
-        Query query = entityManager.createNativeQuery("""
-                SELECT result.*
-                FROM copy_ticket_with_discount(?1, ?2) AS result
-                WHERE result.id IS NOT NULL
-                """, Ticket.class);
+    public Optional<TicketReadModel> copyWithDiscount(int ticketId, double discount) {
+        Query query = ticketReadModelQuery(
+                "copy_ticket_with_discount(?1, ?2)", " ORDER BY t.id");
         query.setParameter(1, ticketId);
         query.setParameter(2, discount);
-        return singleTicket(query);
+        return ticketReadModels(query).stream().findFirst();
     }
 
     private String normalizeFilter(String value) {
@@ -127,12 +152,17 @@ public class TicketRepository {
         return "%" + value.toLowerCase(Locale.ROOT) + "%";
     }
 
-    private Optional<Ticket> singleTicket(Query query) {
-        return ticketList(query).stream().findFirst();
+    private Query ticketReadModelQuery(String source, String suffix) {
+        return entityManager.createNativeQuery(
+                TICKET_READ_MODEL_SELECT.formatted(source) + suffix,
+                "TicketReadRowMapping");
     }
 
-    @SuppressWarnings("unchecked")
-    private List<Ticket> ticketList(Query query) {
-        return (List<Ticket>) query.getResultList();
+    private List<TicketReadModel> ticketReadModels(Query query) {
+        List<?> rows = query.getResultList();
+        return rows.stream()
+                .map(TicketReadRow.class::cast)
+                .map(TicketReadRow::toReadModel)
+                .toList();
     }
 }
