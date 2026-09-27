@@ -7,14 +7,27 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
-import jakarta.persistence.TypedQuery;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 
 @ApplicationScoped
 public class TicketRepository {
+
+    private static final Map<String, String> STRING_COLUMNS = Map.ofEntries(
+            Map.entry("name", "t.name"),
+            Map.entry("type", "t.type"),
+            Map.entry("person.eyeColor", "p.eye_color"),
+            Map.entry("person.hairColor", "p.hair_color"),
+            Map.entry("person.nationality", "p.nationality"),
+            Map.entry("person.location.name", "l.name"),
+            Map.entry("event.name", "e.name"),
+            Map.entry("event.description", "e.description"),
+            Map.entry("venue.name", "v.name"),
+            Map.entry("venue.type", "v.type")
+    );
 
     private static final String TICKET_READ_MODEL_SELECT = """
             SELECT
@@ -72,13 +85,19 @@ public class TicketRepository {
         return ticketReadModels(query).stream().findFirst();
     }
 
-    public List<TicketReadModel> findReadModelPage(
-            int offset, int limit, String nameFilter, boolean ascending) {
-        String filter = normalizeFilter(nameFilter);
+    public List<TicketReadModel> findReadModelPage(int offset, int limit,
+                                                   String filterField,
+                                                   String filterValue,
+                                                   String sortField,
+                                                   boolean ascending) {
+        String filter = normalizeFilter(filterValue);
+        String filterColumn = column(filterField);
+        String sortColumn = column(sortField);
         String suffix = (filter == null
                 ? ""
-                : " WHERE LOWER(t.name) LIKE ?1")
-                + " ORDER BY t.name " + (ascending ? "ASC" : "DESC") + ", t.id ASC";
+                : " WHERE POSITION(?1 IN LOWER(" + filterColumn + ")) > 0")
+                + " ORDER BY " + sortColumn + " "
+                + (ascending ? "ASC" : "DESC") + " NULLS LAST, t.id ASC";
 
         Query query = ticketReadModelQuery("tickets", suffix)
                 .setFirstResult(offset)
@@ -91,17 +110,25 @@ public class TicketRepository {
         return ticketReadModels(query);
     }
 
-    public long count(String nameFilter) {
-        String filter = normalizeFilter(nameFilter);
-        String queryText = "SELECT COUNT(t) FROM Ticket t"
-                + (filter == null ? "" : " WHERE LOWER(t.name) LIKE :filter");
-        TypedQuery<Long> query = entityManager.createQuery(queryText, Long.class);
+    public long count(String filterField, String filterValue) {
+        String filter = normalizeFilter(filterValue);
+        String queryText = """
+                SELECT COUNT(t.id)
+                FROM tickets t
+                LEFT JOIN persons p ON p.id = t.person_id
+                LEFT JOIN locations l ON l.person_id = p.id
+                LEFT JOIN events e ON e.id = t.event_id
+                JOIN venues v ON v.id = t.venue_id
+                """ + (filter == null
+                ? ""
+                : " WHERE POSITION(?1 IN LOWER(" + column(filterField) + ")) > 0");
+        Query query = entityManager.createNativeQuery(queryText);
 
         if (filter != null) {
-            query.setParameter("filter", filter);
+            query.setParameter(1, filter);
         }
 
-        return query.getSingleResult();
+        return ((Number) query.getSingleResult()).longValue();
     }
 
     public void remove(Ticket ticket) {
@@ -149,7 +176,16 @@ public class TicketRepository {
         if (value == null || value.isBlank()) {
             return null;
         }
-        return "%" + value.toLowerCase(Locale.ROOT) + "%";
+        return value.toLowerCase(Locale.ROOT);
+    }
+
+    private String column(String field) {
+        String column = STRING_COLUMNS.get(field);
+        if (column == null) {
+            throw new IllegalArgumentException(
+                    "Unsupported string field: " + field);
+        }
+        return column;
     }
 
     private Query ticketReadModelQuery(String source, String suffix) {

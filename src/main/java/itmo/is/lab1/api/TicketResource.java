@@ -56,10 +56,13 @@ public class TicketResource {
     public PageResponse<TicketResponse> findPage(
             @QueryParam("page") @DefaultValue("0") int page,
             @QueryParam("size") @DefaultValue("20") int size,
-            @QueryParam("name") String name,
+            @QueryParam("filterField") @DefaultValue("name") String filterField,
+            @QueryParam("filter") String filter,
+            @QueryParam("sortField") @DefaultValue("name") String sortField,
             @QueryParam("ascending") @DefaultValue("true") boolean ascending) {
         return PageResponse.from(
-                ticketService.findPage(page, size, name, ascending),
+                ticketService.findPage(
+                        page, size, filterField, filter, sortField, ascending),
                 TicketResponse::from
         );
     }

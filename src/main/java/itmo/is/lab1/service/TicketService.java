@@ -57,14 +57,16 @@ public class TicketService {
         return requireTicketReadModel(id);
     }
 
-    public Page<TicketReadModel> findPage(int page, int size, String nameFilter,
-                                        boolean ascending) {
+    public Page<TicketReadModel> findPage(int page, int size,
+                                          String filterField, String filterValue,
+                                          String sortField, boolean ascending) {
         validatePage(page, size);
         int offset = Math.multiplyExact(page, size);
         return new Page<>(
                 ticketRepository.findReadModelPage(
-                        offset, size, nameFilter, ascending),
-                ticketRepository.count(nameFilter),
+                        offset, size, filterField, filterValue,
+                        sortField, ascending),
+                ticketRepository.count(filterField, filterValue),
                 page,
                 size
         );
