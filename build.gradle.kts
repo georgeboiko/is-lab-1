@@ -17,6 +17,7 @@ val postgresqlDriver = configurations.create("postgresqlDriver")
 
 dependencies {
     compileOnly("jakarta.platform:jakarta.jakartaee-web-api:10.0.0")
+    implementation("org.mindrot:jbcrypt:0.4")
     compileOnly("org.projectlombok:lombok:1.18.48")
     annotationProcessor("org.projectlombok:lombok:1.18.48")
 

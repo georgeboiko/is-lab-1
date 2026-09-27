@@ -1,5 +1,26 @@
 BEGIN;
 
+CREATE TABLE app_users (
+    id BIGSERIAL PRIMARY KEY,
+    username VARCHAR(64) NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT app_users_id_positive CHECK (id > 0),
+    CONSTRAINT app_users_username_not_blank CHECK (btrim(username) <> ''),
+    CONSTRAINT app_users_password_hash_not_blank CHECK (btrim(password_hash) <> '')
+);
+
+CREATE TABLE auth_tokens (
+    token_hash VARCHAR(64) PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT auth_tokens_user_fk FOREIGN KEY (user_id)
+        REFERENCES app_users (id) ON DELETE CASCADE
+);
+
 CREATE TABLE venues (
     id BIGSERIAL PRIMARY KEY,
     name TEXT NOT NULL,
