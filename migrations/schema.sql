@@ -1,6 +1,6 @@
 BEGIN;
 
-CREATE TABLE app_users (
+CREATE TABLE IF NOT EXISTS app_users (
     id BIGSERIAL PRIMARY KEY,
     username VARCHAR(64) NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
@@ -11,7 +11,7 @@ CREATE TABLE app_users (
     CONSTRAINT app_users_password_hash_not_blank CHECK (btrim(password_hash) <> '')
 );
 
-CREATE TABLE auth_tokens (
+CREATE TABLE IF NOT EXISTS auth_tokens (
     token_hash VARCHAR(64) PRIMARY KEY,
     user_id BIGINT NOT NULL,
     expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
@@ -21,7 +21,7 @@ CREATE TABLE auth_tokens (
         REFERENCES app_users (id) ON DELETE CASCADE
 );
 
-CREATE TABLE venues (
+CREATE TABLE IF NOT EXISTS venues (
     id BIGSERIAL PRIMARY KEY,
     name TEXT NOT NULL,
     capacity INTEGER NOT NULL,
@@ -35,7 +35,7 @@ CREATE TABLE venues (
     ))
 );
 
-CREATE TABLE events (
+CREATE TABLE IF NOT EXISTS events (
     id BIGSERIAL PRIMARY KEY,
     name TEXT NOT NULL,
     event_date TIMESTAMP NOT NULL,
@@ -49,7 +49,7 @@ CREATE TABLE events (
     CONSTRAINT events_description_not_blank CHECK (btrim(description) <> '')
 );
 
-CREATE TABLE persons (
+CREATE TABLE IF NOT EXISTS persons (
     id BIGSERIAL PRIMARY KEY,
     eye_color VARCHAR(16),
     hair_color VARCHAR(16) NOT NULL,
@@ -71,7 +71,7 @@ CREATE TABLE persons (
     )
 );
 
-CREATE TABLE locations (
+CREATE TABLE IF NOT EXISTS locations (
     person_id BIGINT PRIMARY KEY,
     x DOUBLE PRECISION NOT NULL,
     y INTEGER NOT NULL,
@@ -82,7 +82,7 @@ CREATE TABLE locations (
         REFERENCES persons (id) ON DELETE CASCADE
 );
 
-CREATE TABLE tickets (
+CREATE TABLE IF NOT EXISTS tickets (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
     coordinates_x INTEGER NOT NULL,
