@@ -6,7 +6,6 @@ import itmo.is.lab1.dto.request.CredentialsRequest;
 import itmo.is.lab1.dto.response.AuthResponse;
 import itmo.is.lab1.dto.response.UserResponse;
 import itmo.is.lab1.service.AuthService;
-import jakarta.annotation.security.PermitAll;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -32,7 +31,6 @@ public class AuthResource {
 
     @POST
     @Path("/register")
-    @PermitAll
     public Response register(@Valid @NotNull CredentialsRequest input) {
         AuthService.LoginResult result = authService.register(input);
         return Response.status(Response.Status.CREATED)
@@ -42,7 +40,6 @@ public class AuthResource {
 
     @POST
     @Path("/login")
-    @PermitAll
     public AuthResponse login(@Valid @NotNull CredentialsRequest input) {
         return toResponse(authService.login(input));
     }

@@ -6,7 +6,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.Optional;
 
 @ApplicationScoped
@@ -34,7 +34,7 @@ public class AuthRepository {
                 .findFirst();
     }
 
-    public Optional<AuthToken> findValidToken(String tokenHash, Instant now) {
+    public Optional<AuthToken> findValidToken(String tokenHash, OffsetDateTime now) {
         return entityManager.createQuery("""
                         SELECT t FROM AuthToken t
                         JOIN FETCH t.user
@@ -54,7 +54,7 @@ public class AuthRepository {
                 .executeUpdate();
     }
 
-    public void deleteExpiredTokens(Instant now) {
+    public void deleteExpiredTokens(OffsetDateTime now) {
         entityManager.createQuery(
                         "DELETE FROM AuthToken t WHERE t.expiresAt <= :now")
                 .setParameter("now", now)

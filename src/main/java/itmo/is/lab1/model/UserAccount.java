@@ -10,7 +10,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.Instant;
+import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "app_users")
@@ -33,7 +33,7 @@ public class UserAccount {
     @Column(name = "created_at", nullable = false,
             insertable = false, updatable = false)
     @Setter(AccessLevel.NONE)
-    private Instant createdAt;
+    private OffsetDateTime createdAt;
 
     protected UserAccount() {
     }

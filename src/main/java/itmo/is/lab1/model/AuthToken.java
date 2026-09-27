@@ -11,7 +11,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.Instant;
+import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "auth_tokens")
@@ -30,17 +30,17 @@ public class AuthToken {
 
     @Column(name = "expires_at", nullable = false)
     @Setter(AccessLevel.NONE)
-    private Instant expiresAt;
+    private OffsetDateTime expiresAt;
 
     @Column(name = "created_at", nullable = false,
             insertable = false, updatable = false)
     @Setter(AccessLevel.NONE)
-    private Instant createdAt;
+    private OffsetDateTime createdAt;
 
     protected AuthToken() {
     }
 
-    public AuthToken(String tokenHash, UserAccount user, Instant expiresAt) {
+    public AuthToken(String tokenHash, UserAccount user, OffsetDateTime expiresAt) {
         this.tokenHash = tokenHash;
         this.user = user;
         this.expiresAt = expiresAt;

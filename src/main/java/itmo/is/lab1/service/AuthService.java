@@ -16,7 +16,8 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.Duration;
-import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Base64;
 import java.util.HexFormat;
 import java.util.Locale;
@@ -62,7 +63,7 @@ public class AuthService {
                 .orElseThrow(() -> new SecurityException(
                         "Invalid username or password"));
 
-        authRepository.deleteExpiredTokens(Instant.now());
+        authRepository.deleteExpiredTokens(now());
         return createToken(user);
     }
 
@@ -70,7 +71,7 @@ public class AuthService {
         if (rawToken == null || rawToken.isBlank()) {
             return Optional.empty();
         }
-        return authRepository.findValidToken(hashToken(rawToken), Instant.now())
+        return authRepository.findValidToken(hashToken(rawToken), now())
                 .map(token -> new AuthenticatedUser(
                         token.getUser().getId(),
                         token.getUser().getUsername()));
@@ -88,7 +89,7 @@ public class AuthService {
         secureRandom.nextBytes(bytes);
         String rawToken = Base64.getUrlEncoder().withoutPadding()
                 .encodeToString(bytes);
-        Instant expiresAt = Instant.now().plus(TOKEN_LIFETIME);
+        OffsetDateTime expiresAt = now().plus(TOKEN_LIFETIME);
         authRepository.persist(new AuthToken(
                 hashToken(rawToken), user, expiresAt));
         return new LoginResult(
@@ -114,9 +115,13 @@ public class AuthService {
         }
     }
 
+    private OffsetDateTime now() {
+        return OffsetDateTime.now(ZoneOffset.UTC);
+    }
+
     public record LoginResult(
             String token,
-            Instant expiresAt,
+            OffsetDateTime expiresAt,
             Long userId,
             String username
     ) {}

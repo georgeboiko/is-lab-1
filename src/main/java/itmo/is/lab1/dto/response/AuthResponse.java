@@ -1,10 +1,10 @@
 package itmo.is.lab1.dto.response;
 
-import java.time.Instant;
+import java.time.OffsetDateTime;
 
 public record AuthResponse(
         String token,
-        Instant expiresAt,
+        OffsetDateTime expiresAt,
         Long userId,
         String username
 ) {}
