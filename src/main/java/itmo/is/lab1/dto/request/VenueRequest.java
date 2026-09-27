@@ -1,4 +1,4 @@
-package itmo.is.lab1.dto;
+package itmo.is.lab1.dto.request;
 
 import itmo.is.lab1.model.VenueType;
 import jakarta.validation.constraints.NotBlank;

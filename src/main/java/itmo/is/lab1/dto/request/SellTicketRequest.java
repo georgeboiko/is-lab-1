@@ -1,4 +1,4 @@
-package itmo.is.lab1.dto;
+package itmo.is.lab1.dto.request;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
