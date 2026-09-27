@@ -9,6 +9,7 @@ import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
+import jakarta.json.bind.annotation.JsonbTransient;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -28,6 +29,7 @@ public class Location {
     @OneToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "person_id")
     @Setter(AccessLevel.PACKAGE)
+    @JsonbTransient
     private Person person;
 
     @Column(nullable = false)
