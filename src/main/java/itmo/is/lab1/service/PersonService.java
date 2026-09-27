@@ -5,6 +5,7 @@ import itmo.is.lab1.dto.request.PersonRequest;
 import itmo.is.lab1.model.Location;
 import itmo.is.lab1.model.Person;
 import itmo.is.lab1.repository.PersonRepository;
+import itmo.is.lab1.repository.TicketRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityNotFoundException;
@@ -19,6 +20,9 @@ public class PersonService {
 
     @Inject
     private PersonRepository personRepository;
+
+    @Inject
+    private TicketRepository ticketRepository;
 
     @Transactional
     public Person create(@Valid @NotNull PersonRequest input) {
@@ -45,7 +49,12 @@ public class PersonService {
 
     @Transactional
     public void delete(long id) {
-        personRepository.remove(requirePerson(id));
+        Person person = requirePerson(id);
+        if (ticketRepository.existsByPersonId(id)) {
+            throw new IllegalStateException(
+                    "Person with id " + id + " is used by a ticket and cannot be deleted");
+        }
+        personRepository.remove(person);
     }
 
     private void applyInput(Person person, PersonRequest input) {

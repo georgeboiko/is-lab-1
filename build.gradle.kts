@@ -13,10 +13,14 @@ repositories {
     mavenCentral()
 }
 
+val postgresqlDriver = configurations.create("postgresqlDriver")
+
 dependencies {
     compileOnly("jakarta.platform:jakarta.jakartaee-web-api:10.0.0")
     compileOnly("org.projectlombok:lombok:1.18.48")
     annotationProcessor("org.projectlombok:lombok:1.18.48")
+
+    add(postgresqlDriver.name, "org.postgresql:postgresql:42.7.10")
 
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
@@ -31,4 +35,9 @@ tasks.test {
 
 tasks.war {
     archiveFileName = "lab1.war"
+}
+
+tasks.register<Copy>("copyPostgresqlDriver") {
+    from(postgresqlDriver)
+    into(layout.buildDirectory.dir("glassfish/lib"))
 }

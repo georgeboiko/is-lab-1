@@ -3,6 +3,7 @@ package itmo.is.lab1.service;
 import itmo.is.lab1.dto.request.EventRequest;
 import itmo.is.lab1.model.Event;
 import itmo.is.lab1.repository.EventRepository;
+import itmo.is.lab1.repository.TicketRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityNotFoundException;
@@ -17,6 +18,9 @@ public class EventService {
 
     @Inject
     private EventRepository eventRepository;
+
+    @Inject
+    private TicketRepository ticketRepository;
 
     @Transactional
     public Event create(@Valid @NotNull EventRequest input) {
@@ -48,7 +52,12 @@ public class EventService {
 
     @Transactional
     public void delete(long id) {
-        eventRepository.remove(requireEvent(id));
+        Event event = requireEvent(id);
+        if (ticketRepository.existsByEventId(id)) {
+            throw new IllegalStateException(
+                    "Event with id " + id + " is used by a ticket and cannot be deleted");
+        }
+        eventRepository.remove(event);
     }
 
     private Event requireEvent(long id) {

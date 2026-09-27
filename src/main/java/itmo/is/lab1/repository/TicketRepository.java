@@ -131,6 +131,30 @@ public class TicketRepository {
         return ((Number) query.getSingleResult()).longValue();
     }
 
+    public boolean existsByPersonId(long personId) {
+        return entityManager.createQuery(
+                        "SELECT COUNT(t) FROM Ticket t WHERE t.person.id = :id",
+                        Long.class)
+                .setParameter("id", personId)
+                .getSingleResult() > 0;
+    }
+
+    public boolean existsByEventId(long eventId) {
+        return entityManager.createQuery(
+                        "SELECT COUNT(t) FROM Ticket t WHERE t.event.id = :id",
+                        Long.class)
+                .setParameter("id", eventId)
+                .getSingleResult() > 0;
+    }
+
+    public boolean existsByVenueId(long venueId) {
+        return entityManager.createQuery(
+                        "SELECT COUNT(t) FROM Ticket t WHERE t.venue.id = :id",
+                        Long.class)
+                .setParameter("id", venueId)
+                .getSingleResult() > 0;
+    }
+
     public void remove(Ticket ticket) {
         entityManager.remove(ticket);
     }

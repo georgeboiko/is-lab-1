@@ -2,6 +2,7 @@ package itmo.is.lab1.service;
 
 import itmo.is.lab1.dto.request.VenueRequest;
 import itmo.is.lab1.model.Venue;
+import itmo.is.lab1.repository.TicketRepository;
 import itmo.is.lab1.repository.VenueRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -17,6 +18,9 @@ public class VenueService {
 
     @Inject
     private VenueRepository venueRepository;
+
+    @Inject
+    private TicketRepository ticketRepository;
 
     @Transactional
     public Venue create(@Valid @NotNull VenueRequest input) {
@@ -44,7 +48,12 @@ public class VenueService {
 
     @Transactional
     public void delete(long id) {
-        venueRepository.remove(requireVenue(id));
+        Venue venue = requireVenue(id);
+        if (ticketRepository.existsByVenueId(id)) {
+            throw new IllegalStateException(
+                    "Venue with id " + id + " is used by a ticket and cannot be deleted");
+        }
+        venueRepository.remove(venue);
     }
 
     private Venue requireVenue(long id) {
