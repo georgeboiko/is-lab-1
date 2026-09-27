@@ -71,7 +71,10 @@ AS $$
         t.coordinates_y,
         t.person_id,
         t.event_id,
-        t.price * (1 + p_discount / 100.0),
+        ROUND(
+            t.price::NUMERIC * (1 + p_discount::NUMERIC / 100),
+            2
+        )::DOUBLE PRECISION,
         t.type,
         p_discount,
         t.number,
