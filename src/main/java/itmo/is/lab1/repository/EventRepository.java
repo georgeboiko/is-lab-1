@@ -5,6 +5,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,6 +21,19 @@ public class EventRepository {
 
     public Optional<Event> findById(long id) {
         return Optional.ofNullable(entityManager.find(Event.class, id));
+    }
+
+    public List<Event> findByNameAndDate(String name, LocalDateTime date) {
+        return entityManager.createQuery("""
+                        SELECT e FROM Event e
+                        WHERE LOWER(TRIM(e.name)) = LOWER(TRIM(:name))
+                          AND e.date = :date
+                        ORDER BY e.id
+                        """, Event.class)
+                .setParameter("name", name)
+                .setParameter("date", date)
+                .setMaxResults(2)
+                .getResultList();
     }
 
     public List<Event> findAll() {

@@ -40,6 +40,12 @@ public class PersonService {
         return personRepository.findAll();
     }
 
+    public List<Person> findMatching(@Valid @NotNull PersonRequest input) {
+        Person example = new Person(input.hairColor());
+        applyInput(example, input);
+        return personRepository.findMatching(example);
+    }
+
     @Transactional
     public Person update(long id, @Valid @NotNull PersonRequest input) {
         Person person = requirePerson(id);

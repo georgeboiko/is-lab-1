@@ -37,6 +37,10 @@ public class VenueService {
         return venueRepository.findAll();
     }
 
+    public List<Venue> findByName(String name) {
+        return venueRepository.findByName(name);
+    }
+
     @Transactional
     public Venue update(long id, @Valid @NotNull VenueRequest input) {
         Venue venue = requireVenue(id);

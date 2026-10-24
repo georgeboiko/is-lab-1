@@ -11,6 +11,7 @@ import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @ApplicationScoped
@@ -37,6 +38,10 @@ public class EventService {
 
     public List<Event> findAll() {
         return eventRepository.findAll();
+    }
+
+    public List<Event> findByNameAndDate(String name, LocalDateTime date) {
+        return eventRepository.findByNameAndDate(name, date);
     }
 
     @Transactional

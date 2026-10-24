@@ -22,6 +22,17 @@ public class VenueRepository {
         return Optional.ofNullable(entityManager.find(Venue.class, id));
     }
 
+    public List<Venue> findByName(String name) {
+        return entityManager.createQuery("""
+                        SELECT v FROM Venue v
+                        WHERE LOWER(TRIM(v.name)) = LOWER(TRIM(:name))
+                        ORDER BY v.id
+                        """, Venue.class)
+                .setParameter("name", name)
+                .setMaxResults(2)
+                .getResultList();
+    }
+
     public List<Venue> findAll() {
         return entityManager.createQuery(
                         "SELECT v FROM Venue v ORDER BY v.id", Venue.class)
