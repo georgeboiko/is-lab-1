@@ -1,6 +1,5 @@
 package itmo.is.lab1.model;
 
-import jakarta.persistence.Cacheable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
