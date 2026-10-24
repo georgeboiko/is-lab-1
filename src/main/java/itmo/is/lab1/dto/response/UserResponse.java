@@ -1,3 +1,5 @@
 package itmo.is.lab1.dto.response;
 
-public record UserResponse(Long id, String username) {}
+import itmo.is.lab1.model.UserRole;
+
+public record UserResponse(Long id, String username, UserRole role) {}

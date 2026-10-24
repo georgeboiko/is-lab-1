@@ -3,6 +3,7 @@ package itmo.is.lab1.service;
 import itmo.is.lab1.dto.request.CredentialsRequest;
 import itmo.is.lab1.model.AuthToken;
 import itmo.is.lab1.model.UserAccount;
+import itmo.is.lab1.model.UserRole;
 import itmo.is.lab1.repository.AuthRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -74,7 +75,8 @@ public class AuthService {
         return authRepository.findValidToken(hashToken(rawToken), now())
                 .map(token -> new AuthenticatedUser(
                         token.getUser().getId(),
-                        token.getUser().getUsername()));
+                        token.getUser().getUsername(),
+                        token.getUser().getRole()));
     }
 
     @Transactional
@@ -93,7 +95,7 @@ public class AuthService {
         authRepository.persist(new AuthToken(
                 hashToken(rawToken), user, expiresAt));
         return new LoginResult(
-                rawToken, expiresAt, user.getId(), user.getUsername());
+                rawToken, expiresAt, user.getId(), user.getUsername(), user.getRole());
     }
 
     private String normalizeUsername(String username) {
@@ -123,8 +125,9 @@ public class AuthService {
             String token,
             OffsetDateTime expiresAt,
             Long userId,
-            String username
+            String username,
+            UserRole role
     ) {}
 
-    public record AuthenticatedUser(Long id, String username) {}
+    public record AuthenticatedUser(Long id, String username, UserRole role) {}
 }

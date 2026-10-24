@@ -42,7 +42,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
         }
 
         SecurityContext original = requestContext.getSecurityContext();
-        UserPrincipal principal = new UserPrincipal(user.id(), user.username());
+        UserPrincipal principal = new UserPrincipal(user.id(), user.username(), user.role());
         requestContext.setSecurityContext(new SecurityContext() {
             @Override
             public UserPrincipal getUserPrincipal() {
@@ -51,7 +51,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
 
             @Override
             public boolean isUserInRole(String role) {
-                return false;
+                return principal.role().name().equals(role);
             }
 
             @Override

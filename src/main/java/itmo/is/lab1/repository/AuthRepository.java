@@ -34,6 +34,10 @@ public class AuthRepository {
                 .findFirst();
     }
 
+    public Optional<UserAccount> findUserById(long id) {
+        return Optional.ofNullable(entityManager.find(UserAccount.class, id));
+    }
+
     public Optional<AuthToken> findValidToken(String tokenHash, OffsetDateTime now) {
         return entityManager.createQuery("""
                         SELECT t FROM AuthToken t

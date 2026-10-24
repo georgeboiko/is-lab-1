@@ -56,12 +56,12 @@ public class AuthResource {
     @Path("/me")
     public UserResponse me(@Context SecurityContext securityContext) {
         UserPrincipal principal = (UserPrincipal) securityContext.getUserPrincipal();
-        return new UserResponse(principal.id(), principal.name());
+        return new UserResponse(principal.id(), principal.name(), principal.role());
     }
 
     private AuthResponse toResponse(AuthService.LoginResult result) {
         return new AuthResponse(
                 result.token(), result.expiresAt(),
-                result.userId(), result.username());
+                result.userId(), result.username(), result.role());
     }
 }
