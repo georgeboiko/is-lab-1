@@ -2,11 +2,13 @@ package itmo.is.lab1.repository;
 
 import itmo.is.lab1.model.AuthToken;
 import itmo.is.lab1.model.UserAccount;
+import itmo.is.lab1.model.UserRole;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @ApplicationScoped
@@ -36,6 +38,19 @@ public class AuthRepository {
 
     public Optional<UserAccount> findUserById(long id) {
         return Optional.ofNullable(entityManager.find(UserAccount.class, id));
+    }
+
+    public List<UserAccount> findAllUsers() {
+        return entityManager.createQuery(
+                        "SELECT u FROM UserAccount u ORDER BY u.id", UserAccount.class)
+                .getResultList();
+    }
+
+    public long countAdministrators() {
+        return entityManager.createQuery(
+                        "SELECT COUNT(u) FROM UserAccount u WHERE u.role = :role", Long.class)
+                .setParameter("role", UserRole.ADMIN)
+                .getSingleResult();
     }
 
     public Optional<AuthToken> findValidToken(String tokenHash, OffsetDateTime now) {
