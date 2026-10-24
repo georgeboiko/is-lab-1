@@ -40,8 +40,11 @@ public class TicketImportService {
     @Inject
     private PersonService personService;
 
-    @Transactional(rollbackOn = Exception.class)
-    public ImportResult importTickets(@Valid @NotNull TicketImportRequest input) {
+    @Inject
+    private ImportHistoryService historyService;
+
+    @Transactional(value = Transactional.TxType.REQUIRES_NEW, rollbackOn = Exception.class)
+    public ImportResult importTickets(long operationId, @Valid @NotNull TicketImportRequest input) {
         ImportContext context = new ImportContext();
         for (int i = 0; i < input.tickets().size(); ++i) {
             TicketImportItem item = input.tickets().get(i);
@@ -59,6 +62,7 @@ public class TicketImportService {
             context.ticketIds.add(ticket.id());
         }
 
+        historyService.complete(operationId, context.ticketIds.size());
         return new ImportResult(context.ticketIds, context.createdVenueIds,
                 context.createdEventIds, context.createdPersonIds);
     }

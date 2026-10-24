@@ -20,6 +20,9 @@ public class TicketImportExceptionMapper
         if (exception.getRecordNumber() != null) {
             error.add("recordNumber", exception.getRecordNumber());
         }
+        if (exception.getOperationId() != null) {
+            error.add("operationId", exception.getOperationId());
+        }
 
         return Response.status(exception.isConflict()
                         ? Response.Status.CONFLICT : Response.Status.BAD_REQUEST)

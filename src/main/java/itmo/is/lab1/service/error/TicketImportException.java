@@ -15,14 +15,23 @@ public class TicketImportException extends RuntimeException {
     @Getter
     private final boolean conflict;
 
+    @Getter
+    private final Long operationId;
+
     private TicketImportException(Integer recordNumber, String field,
                                   String detail, boolean conflict) {
+        this(recordNumber, field, detail, conflict, null);
+    }
+
+    private TicketImportException(Integer recordNumber, String field,
+                                  String detail, boolean conflict, Long operationId) {
         super((recordNumber == null ? "" : "Record " + recordNumber + ", ")
                 + field + ": " + detail);
         this.recordNumber = recordNumber;
         this.field = field;
         this.detail = detail;
         this.conflict = conflict;
+        this.operationId = operationId;
     }
 
     public static TicketImportException invalid(String field, String message) {
@@ -35,6 +44,13 @@ public class TicketImportException extends RuntimeException {
     }
 
     public TicketImportException atRecord(int number) {
-        return new TicketImportException(number, field, detail, conflict);
+        return new TicketImportException(number, field, detail, conflict, operationId);
+    }
+
+    public TicketImportException withOperationId(long id) {
+        TicketImportException exception = new TicketImportException(
+                recordNumber, field, detail, conflict, id);
+        exception.initCause(this);
+        return exception;
     }
 }
