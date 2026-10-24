@@ -1,0 +1,63 @@
+{
+  "tickets": [
+    {
+      "name": "Билет на спектакль, место 1",
+      "coordinates": {
+        "x": 100,
+        "y": 200
+      },
+      "price": 1500,
+      "type": "USUAL",
+      "discount": 5,
+      "number": 1,
+      "venue": {
+        "name": "БДТ",
+        "capacity": 500,
+        "type": "THEATRE"
+      },
+      "event": {
+        "name": "Губернатор",
+        "date": "2026-11-15T19:00:00",
+        "minAge": 18,
+        "ticketsCount": 500,
+        "description": "Спектакль"
+      },
+      "person": {
+        "eyeColor": "BROWN",
+        "hairColor": "BROWN",
+        "height": 180,
+        "nationality": "FRANCE",
+        "location": {
+          "x": 10.5,
+          "y": 20,
+          "z": 0,
+          "name": "Санкт-Петербург"
+        }
+      }
+    },
+    {
+      "name": "Билет на спектакль, место 2",
+      "coordinates": {
+        "x": 110,
+        "y": 200
+      },
+      "price": 900,
+      "type": "BUDGETARY",
+      "discount": 10,
+      "number": 2,
+      "venue": {
+        "name": "БДТ",
+        "capacity": 500,
+        "type": "THEATRE"
+      },
+      "event": {
+        "name": "Губернатор",
+        "date": "2026-11-15T19:00:00",
+        "minAge": 18,
+        "ticketsCount": 500,
+        "description": "Спектакль"
+      },
+      "person": null
+    }
+  ]
+}
