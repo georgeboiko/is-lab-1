@@ -16,6 +16,7 @@ public class VenueRepository {
 
     public void persist(Venue venue) {
         entityManager.persist(venue);
+        entityManager.flush();
     }
 
     public Optional<Venue> findById(long id) {

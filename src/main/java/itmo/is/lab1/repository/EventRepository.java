@@ -17,6 +17,7 @@ public class EventRepository {
 
     public void persist(Event event) {
         entityManager.persist(event);
+        entityManager.flush();
     }
 
     public Optional<Event> findById(long id) {

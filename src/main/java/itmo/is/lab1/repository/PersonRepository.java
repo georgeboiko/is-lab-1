@@ -19,6 +19,7 @@ public class PersonRepository {
 
     public void persist(Person person) {
         entityManager.persist(person);
+        entityManager.flush();
     }
 
     public Optional<Person> findById(long id) {
