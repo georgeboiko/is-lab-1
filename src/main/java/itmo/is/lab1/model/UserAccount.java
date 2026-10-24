@@ -1,7 +1,10 @@
 package itmo.is.lab1.model;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Cacheable;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -29,6 +32,11 @@ public class UserAccount {
     @Column(name = "password_hash", nullable = false)
     @Setter(AccessLevel.NONE)
     private String passwordHash;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 16)
+    @Setter(AccessLevel.NONE)
+    private UserRole role = UserRole.USER;
 
     @Column(name = "created_at", nullable = false,
             insertable = false, updatable = false)
