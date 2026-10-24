@@ -48,7 +48,8 @@ $$;
 
 CREATE OR REPLACE FUNCTION copy_ticket_with_discount(
     p_ticket_id INTEGER,
-    p_discount DOUBLE PRECISION
+    p_discount DOUBLE PRECISION,
+    p_number INTEGER
 )
 RETURNS tickets
 LANGUAGE sql
@@ -77,7 +78,7 @@ AS $$
         )::DOUBLE PRECISION,
         t.type,
         p_discount,
-        t.number,
+        p_number,
         t.venue_id
     FROM tickets AS t
     WHERE t.id = p_ticket_id
