@@ -4,11 +4,13 @@ CREATE TABLE IF NOT EXISTS app_users (
     id BIGSERIAL PRIMARY KEY,
     username VARCHAR(64) NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
+    role VARCHAR(16) NOT NULL DEFAULT 'USER',
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT app_users_id_positive CHECK (id > 0),
     CONSTRAINT app_users_username_not_blank CHECK (btrim(username) <> ''),
-    CONSTRAINT app_users_password_hash_not_blank CHECK (btrim(password_hash) <> '')
+    CONSTRAINT app_users_password_hash_not_blank CHECK (btrim(password_hash) <> ''),
+    CONSTRAINT app_users_role_valid CHECK (role IN ('USER', 'ADMIN'))
 );
 
 CREATE TABLE IF NOT EXISTS auth_tokens (
@@ -19,6 +21,27 @@ CREATE TABLE IF NOT EXISTS auth_tokens (
 
     CONSTRAINT auth_tokens_user_fk FOREIGN KEY (user_id)
         REFERENCES app_users (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS import_operations (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    status VARCHAR(16) NOT NULL DEFAULT 'RUNNING',
+    added_count INTEGER,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    finished_at TIMESTAMP WITH TIME ZONE,
+    error_message TEXT,
+
+    CONSTRAINT import_operations_user_fk FOREIGN KEY (user_id)
+        REFERENCES app_users (id),
+    CONSTRAINT import_operations_status_valid CHECK (status IN ('RUNNING', 'SUCCESS', 'FAILED')),
+    CONSTRAINT import_operations_result_valid CHECK (
+        (status = 'RUNNING' AND added_count IS NULL AND finished_at IS NULL AND error_message IS NULL)
+        OR (status = 'SUCCESS' AND added_count IS NOT NULL AND added_count >= 0
+            AND finished_at IS NOT NULL AND error_message IS NULL)
+        OR (status = 'FAILED' AND added_count IS NULL AND finished_at IS NOT NULL
+            AND error_message IS NOT NULL)
+    )
 );
 
 CREATE TABLE IF NOT EXISTS venues (
