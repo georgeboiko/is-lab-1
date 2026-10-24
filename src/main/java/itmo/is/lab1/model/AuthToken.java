@@ -1,6 +1,7 @@
 package itmo.is.lab1.model;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Cacheable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
@@ -15,6 +16,7 @@ import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "auth_tokens")
+@Cacheable(false)
 @Getter
 public class AuthToken {
 

@@ -1,6 +1,7 @@
 package itmo.is.lab1.api.security;
 
 import itmo.is.lab1.dto.response.ApiError;
+import itmo.is.lab1.model.UserRole;
 import itmo.is.lab1.service.AuthService;
 import jakarta.annotation.Priority;
 import jakarta.inject.Inject;
@@ -37,6 +38,15 @@ public class AuthenticationFilter implements ContainerRequestFilter {
                     .header(HttpHeaders.WWW_AUTHENTICATE, "Bearer")
                     .type(MediaType.APPLICATION_JSON)
                     .entity(new ApiError("A valid Bearer token is required"))
+                    .build());
+            return;
+        }
+
+        String path = requestContext.getUriInfo().getPath();
+        if (("admin".equals(path) || path.startsWith("admin/")) && user.role() != UserRole.ADMIN) {
+            requestContext.abortWith(Response.status(Response.Status.FORBIDDEN)
+                    .type(MediaType.APPLICATION_JSON)
+                    .entity(new ApiError("Administrator role is required"))
                     .build());
             return;
         }

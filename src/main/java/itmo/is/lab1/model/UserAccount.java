@@ -1,6 +1,7 @@
 package itmo.is.lab1.model;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Cacheable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -16,6 +17,7 @@ import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "app_users")
+@Cacheable(false)
 @Getter
 public class UserAccount {
 
@@ -34,7 +36,7 @@ public class UserAccount {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 16)
-    @Setter(AccessLevel.NONE)
+    @Setter
     private UserRole role = UserRole.USER;
 
     @Column(name = "created_at", nullable = false,
