@@ -13,6 +13,7 @@ import itmo.is.lab1.repository.EventRepository;
 import itmo.is.lab1.repository.PersonRepository;
 import itmo.is.lab1.repository.TicketRepository;
 import itmo.is.lab1.repository.VenueRepository;
+import itmo.is.lab1.service.error.UniquenessViolationException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityNotFoundException;
@@ -25,6 +26,9 @@ import java.util.Optional;
 
 @ApplicationScoped
 public class TicketService {
+
+    @Inject
+    private TransactionIsolation transactionIsolation;
 
     @Inject
     private TicketRepository ticketRepository;
@@ -40,6 +44,7 @@ public class TicketService {
 
     @Transactional
     public TicketReadModel create(@Valid @NotNull TicketRequest input) {
+        transactionIsolation.serializable();
         Venue venue = requireVenue(input.venueId());
         Ticket ticket = new Ticket(
                 input.name(),
@@ -49,6 +54,7 @@ public class TicketService {
                 venue
         );
         applyInput(ticket, input, venue);
+        requireUniqueNumber(input.eventId(), input.venueId(), input.number(), null);
         ticketRepository.persist(ticket);
         return toReadModel(ticket);
     }
@@ -74,8 +80,10 @@ public class TicketService {
 
     @Transactional
     public TicketReadModel update(int id, @Valid @NotNull TicketRequest input) {
+        transactionIsolation.serializable();
         Ticket ticket = requireTicketEntity(id);
         Venue venue = requireVenue(input.venueId());
+        requireUniqueNumber(input.eventId(), input.venueId(), input.number(), id);
         applyInput(ticket, input, venue);
         return toReadModel(ticket);
     }
@@ -112,6 +120,7 @@ public class TicketService {
 
     @Transactional
     public TicketReadModel copyWithDiscount(int ticketId, double discount) {
+        transactionIsolation.serializable();
         if (discount <= 0 || discount > 100) {
             throw new IllegalArgumentException(
                     "Discount must be greater than zero and at most 100");
@@ -123,9 +132,37 @@ public class TicketService {
                     "Ticket with id " + ticketId + " has no price");
         }
 
-        return ticketRepository.copyWithDiscount(ticketId, discount)
+        Long eventId = source.getEvent() == null ? null : source.getEvent().getId();
+        long venueId = source.getVenue().getId();
+        int number = firstAvailableNumber(eventId, venueId);
+        requireUniqueNumber(eventId, venueId, number, null);
+
+        return ticketRepository.copyWithDiscount(ticketId, discount, number)
                 .orElseThrow(() -> new IllegalStateException(
                         "Ticket copy was not created"));
+    }
+
+    private void requireUniqueNumber(Long eventId, long venueId, int number, Integer excludedId) {
+        if (ticketRepository.existsByEventVenueAndNumber(eventId, venueId, number, excludedId)) {
+            throw new UniquenessViolationException("number",
+                    "A ticket with this event, venue and number already exists");
+        }
+    }
+
+    private int firstAvailableNumber(Long eventId, long venueId) {
+        long candidate = 1;
+        for (int number : ticketRepository.findNumbersByEventAndVenue(eventId, venueId)) {
+            if (number > candidate) {
+                break;
+            }
+            if (number == candidate) {
+                candidate++;
+            }
+        }
+        if (candidate > Integer.MAX_VALUE) {
+            throw new IllegalStateException("No ticket number is available for this event and venue");
+        }
+        return (int) candidate;
     }
 
     private void applyInput(Ticket ticket, TicketRequest input, Venue venue) {

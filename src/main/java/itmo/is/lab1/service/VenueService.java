@@ -4,6 +4,7 @@ import itmo.is.lab1.dto.request.VenueRequest;
 import itmo.is.lab1.model.Venue;
 import itmo.is.lab1.repository.TicketRepository;
 import itmo.is.lab1.repository.VenueRepository;
+import itmo.is.lab1.service.error.UniquenessViolationException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityNotFoundException;
@@ -17,6 +18,9 @@ import java.util.List;
 public class VenueService {
 
     @Inject
+    private TransactionIsolation transactionIsolation;
+
+    @Inject
     private VenueRepository venueRepository;
 
     @Inject
@@ -24,6 +28,8 @@ public class VenueService {
 
     @Transactional
     public Venue create(@Valid @NotNull VenueRequest input) {
+        transactionIsolation.serializable();
+        requireUniqueName(input.name(), null);
         Venue venue = new Venue(input.name(), input.capacity(), input.type());
         venueRepository.persist(venue);
         return venue;
@@ -43,7 +49,9 @@ public class VenueService {
 
     @Transactional
     public Venue update(long id, @Valid @NotNull VenueRequest input) {
+        transactionIsolation.serializable();
         Venue venue = requireVenue(id);
+        requireUniqueName(input.name(), id);
         venue.setName(input.name());
         venue.setCapacity(input.capacity());
         venue.setType(input.type());
@@ -58,6 +66,15 @@ public class VenueService {
                     "Venue with id " + id + " is used by a ticket and cannot be deleted");
         }
         venueRepository.remove(venue);
+    }
+
+    private void requireUniqueName(String name, Long excludedId) {
+        for (Venue venue : venueRepository.findByName(name)) {
+            if (excludedId == null || !excludedId.equals(venue.getId())) {
+                throw new UniquenessViolationException("name",
+                        "A venue with this name already exists");
+            }
+        }
     }
 
     private Venue requireVenue(long id) {

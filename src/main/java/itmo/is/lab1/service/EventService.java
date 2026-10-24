@@ -4,6 +4,7 @@ import itmo.is.lab1.dto.request.EventRequest;
 import itmo.is.lab1.model.Event;
 import itmo.is.lab1.repository.EventRepository;
 import itmo.is.lab1.repository.TicketRepository;
+import itmo.is.lab1.service.error.UniquenessViolationException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityNotFoundException;
@@ -18,6 +19,9 @@ import java.util.List;
 public class EventService {
 
     @Inject
+    private TransactionIsolation transactionIsolation;
+
+    @Inject
     private EventRepository eventRepository;
 
     @Inject
@@ -25,6 +29,8 @@ public class EventService {
 
     @Transactional
     public Event create(@Valid @NotNull EventRequest input) {
+        transactionIsolation.serializable();
+        requireUniqueNameAndDate(input.name(), input.date(), null);
         Event event = new Event(
                 input.name(), input.date(), input.minAge(),
                 input.ticketsCount(), input.description());
@@ -46,7 +52,9 @@ public class EventService {
 
     @Transactional
     public Event update(long id, @Valid @NotNull EventRequest input) {
+        transactionIsolation.serializable();
         Event event = requireEvent(id);
+        requireUniqueNameAndDate(input.name(), input.date(), id);
         event.setName(input.name());
         event.setDate(input.date());
         event.setMinAge(input.minAge());
@@ -63,6 +71,15 @@ public class EventService {
                     "Event with id " + id + " is used by a ticket and cannot be deleted");
         }
         eventRepository.remove(event);
+    }
+
+    private void requireUniqueNameAndDate(String name, LocalDateTime date, Long excludedId) {
+        for (Event event : eventRepository.findByNameAndDate(name, date)) {
+            if (excludedId == null || !excludedId.equals(event.getId())) {
+                throw new UniquenessViolationException("name",
+                        "An event with this name and date/time already exists");
+            }
+        }
     }
 
     private Event requireEvent(long id) {

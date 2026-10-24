@@ -11,6 +11,7 @@ import itmo.is.lab1.model.Person;
 import itmo.is.lab1.model.TicketReadModel;
 import itmo.is.lab1.model.Venue;
 import itmo.is.lab1.service.error.TicketImportException;
+import itmo.is.lab1.service.error.UniquenessViolationException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -24,9 +25,13 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Supplier;
 
 @ApplicationScoped
 public class TicketImportService {
+
+    @Inject
+    private TransactionIsolation transactionIsolation;
 
     @Inject
     private TicketService ticketService;
@@ -45,20 +50,23 @@ public class TicketImportService {
 
     @Transactional(value = Transactional.TxType.REQUIRES_NEW, rollbackOn = Exception.class)
     public ImportResult importTickets(long operationId, @Valid @NotNull TicketImportRequest input) {
+        transactionIsolation.serializable();
         ImportContext context = new ImportContext();
         for (int i = 0; i < input.tickets().size(); ++i) {
             TicketImportItem item = input.tickets().get(i);
             int recordNumber = i + 1;
-            Venue venue = resolveVenue(item.venue(), recordNumber, context);
-            Event event = resolveEvent(item.event(), recordNumber, context);
+            Venue venue = withRecord(recordNumber, "venue.",
+                    () -> resolveVenue(item.venue(), recordNumber, context));
+            Event event = withRecord(recordNumber, "event.",
+                    () -> resolveEvent(item.event(), recordNumber, context));
             Person person = resolvePerson(item.person(), recordNumber, context);
 
-            TicketReadModel ticket = ticketService.create(new TicketRequest(
+            TicketReadModel ticket = withRecord(recordNumber, "", () -> ticketService.create(new TicketRequest(
                     item.name(), item.coordinates(),
                     person == null ? null : person.getId(),
                     event == null ? null : event.getId(),
                     item.price(), item.type(), item.discount(), item.number(), venue.getId()
-            ));
+            )));
             context.ticketIds.add(ticket.id());
         }
 
@@ -147,6 +155,15 @@ public class TicketImportService {
             context.persons.put(input, person);
         }
         return person;
+    }
+
+    private <T> T withRecord(int recordNumber, String prefix, Supplier<T> action) {
+        try {
+            return action.get();
+        } catch (UniquenessViolationException exception) {
+            throw TicketImportException.conflict(
+                    recordNumber, prefix + exception.getField(), exception.getMessage());
+        }
     }
 
     private String normalizeName(String name) {

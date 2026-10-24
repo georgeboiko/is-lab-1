@@ -155,6 +155,40 @@ public class TicketRepository {
                 .getSingleResult() > 0;
     }
 
+    public boolean existsByEventVenueAndNumber(Long eventId, long venueId,
+                                               int number, Integer excludedId) {
+        var query = entityManager.createQuery("""
+                        SELECT COUNT(t) FROM Ticket t
+                        WHERE t.venue.id = :venueId AND t.number = :number
+                        """ + eventCondition(eventId)
+                        + (excludedId == null ? "" : " AND t.id <> :excludedId"), Long.class)
+                .setParameter("venueId", venueId)
+                .setParameter("number", number);
+        if (eventId != null) {
+            query.setParameter("eventId", eventId);
+        }
+        if (excludedId != null) {
+            query.setParameter("excludedId", excludedId);
+        }
+        return query.getSingleResult() > 0;
+    }
+
+    public List<Integer> findNumbersByEventAndVenue(Long eventId, long venueId) {
+        var query = entityManager.createQuery("""
+                        SELECT DISTINCT t.number FROM Ticket t
+                        WHERE t.venue.id = :venueId
+                        """ + eventCondition(eventId) + " ORDER BY t.number", Integer.class)
+                .setParameter("venueId", venueId);
+        if (eventId != null) {
+            query.setParameter("eventId", eventId);
+        }
+        return query.getResultList();
+    }
+
+    private String eventCondition(Long eventId) {
+        return eventId == null ? " AND t.event IS NULL" : " AND t.event.id = :eventId";
+    }
+
     public void remove(Ticket ticket) {
         entityManager.remove(ticket);
     }
@@ -188,11 +222,12 @@ public class TicketRepository {
         return ticketReadModels(query).stream().findFirst();
     }
 
-    public Optional<TicketReadModel> copyWithDiscount(int ticketId, double discount) {
+    public Optional<TicketReadModel> copyWithDiscount(int ticketId, double discount, int number) {
         Query query = ticketReadModelQuery(
-                "copy_ticket_with_discount(?1, ?2)", " ORDER BY t.id");
+                "copy_ticket_with_discount(?1, ?2, ?3)", " ORDER BY t.id");
         query.setParameter(1, ticketId);
         query.setParameter(2, discount);
+        query.setParameter(3, number);
         return ticketReadModels(query).stream().findFirst();
     }
 
