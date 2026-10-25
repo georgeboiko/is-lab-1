@@ -3,8 +3,6 @@ package itmo.is.lab1.repository;
 import itmo.is.lab1.model.Location;
 import itmo.is.lab1.model.Person;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -12,18 +10,15 @@ import java.util.Map;
 import java.util.Optional;
 
 @ApplicationScoped
-public class PersonRepository {
-
-    @PersistenceContext(unitName = "lab1")
-    private EntityManager entityManager;
+public class PersonRepository extends JpaRepository {
 
     public void persist(Person person) {
-        entityManager.persist(person);
-        entityManager.flush();
+        entityManager().persist(person);
+        entityManager().flush();
     }
 
     public Optional<Person> findById(long id) {
-        return entityManager.createQuery("""
+        return entityManager().createQuery("""
                         SELECT p
                         FROM Person p
                         LEFT JOIN FETCH p.location
@@ -35,7 +30,7 @@ public class PersonRepository {
     }
 
     public List<Person> findAll() {
-        return entityManager.createQuery("""
+        return entityManager().createQuery("""
                         SELECT p
                         FROM Person p
                         LEFT JOIN FETCH p.location
@@ -71,7 +66,7 @@ public class PersonRepository {
         }
         jpql.append(" ORDER BY p.id");
 
-        var query = entityManager.createQuery(jpql.toString(), Person.class)
+        var query = entityManager().createQuery(jpql.toString(), Person.class)
                 .setMaxResults(2);
         parameters.forEach(query::setParameter);
         return query.getResultList();
@@ -89,6 +84,6 @@ public class PersonRepository {
     }
 
     public void remove(Person person) {
-        entityManager.remove(person);
+        entityManager().remove(person);
     }
 }

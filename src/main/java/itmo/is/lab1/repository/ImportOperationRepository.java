@@ -2,29 +2,24 @@ package itmo.is.lab1.repository;
 
 import itmo.is.lab1.model.ImportOperation;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 
 import java.util.List;
 import java.util.Optional;
 
 @ApplicationScoped
-public class ImportOperationRepository {
-
-    @PersistenceContext(unitName = "lab1")
-    private EntityManager entityManager;
+public class ImportOperationRepository extends JpaRepository {
 
     public void persist(ImportOperation operation) {
-        entityManager.persist(operation);
-        entityManager.flush();
+        entityManager().persist(operation);
+        entityManager().flush();
     }
 
     public Optional<ImportOperation> findById(long id) {
-        return Optional.ofNullable(entityManager.find(ImportOperation.class, id));
+        return Optional.ofNullable(entityManager().find(ImportOperation.class, id));
     }
 
     public Optional<ImportOperation> findVisibleById(long id, Long ownerId) {
-        var query = entityManager.createQuery("""
+        var query = entityManager().createQuery("""
                         SELECT o FROM ImportOperation o
                         JOIN FETCH o.user
                         WHERE o.id = :id
@@ -38,7 +33,7 @@ public class ImportOperationRepository {
     }
 
     public List<ImportOperation> findPage(Long ownerId, int offset, int limit) {
-        var query = entityManager.createQuery("""
+        var query = entityManager().createQuery("""
                         SELECT o FROM ImportOperation o
                         JOIN FETCH o.user
                         """ + (ownerId == null ? "" : " WHERE o.user.id = :ownerId")
@@ -52,7 +47,7 @@ public class ImportOperationRepository {
     }
 
     public long count(Long ownerId) {
-        var query = entityManager.createQuery(
+        var query = entityManager().createQuery(
                 "SELECT COUNT(o) FROM ImportOperation o"
                         + (ownerId == null ? "" : " WHERE o.user.id = :ownerId"), Long.class);
         if (ownerId != null) {

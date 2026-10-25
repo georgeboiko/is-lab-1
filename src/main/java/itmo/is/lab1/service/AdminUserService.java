@@ -1,5 +1,6 @@
 package itmo.is.lab1.service;
 
+import itmo.is.lab1.persistence.TransactionIsolation;
 import itmo.is.lab1.dto.request.UpdateUserRoleRequest;
 import itmo.is.lab1.model.UserAccount;
 import itmo.is.lab1.model.UserRole;

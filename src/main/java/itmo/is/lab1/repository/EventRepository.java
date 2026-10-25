@@ -2,30 +2,25 @@ package itmo.is.lab1.repository;
 
 import itmo.is.lab1.model.Event;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 @ApplicationScoped
-public class EventRepository {
-
-    @PersistenceContext(unitName = "lab1")
-    private EntityManager entityManager;
+public class EventRepository extends JpaRepository {
 
     public void persist(Event event) {
-        entityManager.persist(event);
-        entityManager.flush();
+        entityManager().persist(event);
+        entityManager().flush();
     }
 
     public Optional<Event> findById(long id) {
-        return Optional.ofNullable(entityManager.find(Event.class, id));
+        return Optional.ofNullable(entityManager().find(Event.class, id));
     }
 
     public List<Event> findByNameAndDate(String name, LocalDateTime date) {
-        return entityManager.createQuery("""
+        return entityManager().createQuery("""
                         SELECT e FROM Event e
                         WHERE LOWER(TRIM(e.name)) = LOWER(TRIM(:name))
                           AND e.date = :date
@@ -38,12 +33,12 @@ public class EventRepository {
     }
 
     public List<Event> findAll() {
-        return entityManager.createQuery(
+        return entityManager().createQuery(
                 "SELECT e FROM Event e ORDER BY e.id", Event.class)
                 .getResultList();
     }
 
     public void remove(Event event) {
-        entityManager.remove(event);
+        entityManager().remove(event);
     }
 }

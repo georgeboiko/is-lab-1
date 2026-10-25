@@ -4,8 +4,6 @@ import itmo.is.lab1.model.Ticket;
 import itmo.is.lab1.model.TicketReadModel;
 import itmo.is.lab1.repository.projection.TicketReadRow;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
 
 import java.util.List;
@@ -14,7 +12,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @ApplicationScoped
-public class TicketRepository {
+public class TicketRepository extends JpaRepository {
 
     private static final Map<String, String> STRING_COLUMNS = Map.ofEntries(
             Map.entry("name", "t.name"),
@@ -66,17 +64,14 @@ public class TicketRepository {
             JOIN venues v ON v.id = t.venue_id
             """;
 
-    @PersistenceContext(unitName = "lab1")
-    private EntityManager entityManager;
-
     public void persist(Ticket ticket) {
-        entityManager.persist(ticket);
-        entityManager.flush();
-        entityManager.refresh(ticket);
+        entityManager().persist(ticket);
+        entityManager().flush();
+        entityManager().refresh(ticket);
     }
 
     public Optional<Ticket> findEntityById(int id) {
-        return Optional.ofNullable(entityManager.find(Ticket.class, id));
+        return Optional.ofNullable(entityManager().find(Ticket.class, id));
     }
 
     public Optional<TicketReadModel> findReadModelById(int id) {
@@ -122,7 +117,7 @@ public class TicketRepository {
                 """ + (filter == null
                 ? ""
                 : " WHERE POSITION(?1 IN LOWER(" + column(filterField) + ")) > 0");
-        Query query = entityManager.createNativeQuery(queryText);
+        Query query = entityManager().createNativeQuery(queryText);
 
         if (filter != null) {
             query.setParameter(1, filter);
@@ -132,7 +127,7 @@ public class TicketRepository {
     }
 
     public boolean existsByPersonId(long personId) {
-        return entityManager.createQuery(
+        return entityManager().createQuery(
                         "SELECT COUNT(t) FROM Ticket t WHERE t.person.id = :id",
                         Long.class)
                 .setParameter("id", personId)
@@ -140,7 +135,7 @@ public class TicketRepository {
     }
 
     public boolean existsByEventId(long eventId) {
-        return entityManager.createQuery(
+        return entityManager().createQuery(
                         "SELECT COUNT(t) FROM Ticket t WHERE t.event.id = :id",
                         Long.class)
                 .setParameter("id", eventId)
@@ -148,7 +143,7 @@ public class TicketRepository {
     }
 
     public boolean existsByVenueId(long venueId) {
-        return entityManager.createQuery(
+        return entityManager().createQuery(
                         "SELECT COUNT(t) FROM Ticket t WHERE t.venue.id = :id",
                         Long.class)
                 .setParameter("id", venueId)
@@ -157,7 +152,7 @@ public class TicketRepository {
 
     public boolean existsByEventVenueAndNumber(Long eventId, long venueId,
                                                int number, Integer excludedId) {
-        var query = entityManager.createQuery("""
+        var query = entityManager().createQuery("""
                         SELECT COUNT(t) FROM Ticket t
                         WHERE t.venue.id = :venueId AND t.number = :number
                         """ + eventCondition(eventId)
@@ -174,7 +169,7 @@ public class TicketRepository {
     }
 
     public List<Integer> findNumbersByEventAndVenue(Long eventId, long venueId) {
-        var query = entityManager.createQuery("""
+        var query = entityManager().createQuery("""
                         SELECT DISTINCT t.number FROM Ticket t
                         WHERE t.venue.id = :venueId
                         """ + eventCondition(eventId) + " ORDER BY t.number", Integer.class)
@@ -190,7 +185,7 @@ public class TicketRepository {
     }
 
     public void remove(Ticket ticket) {
-        entityManager.remove(ticket);
+        entityManager().remove(ticket);
     }
 
     public Optional<TicketReadModel> findWithMaxId() {
@@ -248,7 +243,7 @@ public class TicketRepository {
     }
 
     private Query ticketReadModelQuery(String source, String suffix) {
-        return entityManager.createNativeQuery(
+        return entityManager().createNativeQuery(
                 TICKET_READ_MODEL_SELECT.formatted(source) + suffix,
                 "TicketReadRowMapping");
     }

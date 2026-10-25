@@ -7,8 +7,18 @@
     <persistence-unit name="lab1" transaction-type="JTA">
         <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
         <jta-data-source>jdbc/lab1</jta-data-source>
+        <shared-cache-mode>NONE</shared-cache-mode>
         <properties>
             <property name="eclipselink.logging.parameters" value="false"/>
+        </properties>
+    </persistence-unit>
+    <persistence-unit name="lab1Serializable" transaction-type="JTA">
+        <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
+        <jta-data-source>jdbc/lab1Serializable</jta-data-source>
+        <shared-cache-mode>NONE</shared-cache-mode>
+        <properties>
+            <property name="eclipselink.logging.parameters" value="false"/>
+            <property name="eclipselink.transaction.join-existing" value="true"/>
         </properties>
     </persistence-unit>
 </persistence>

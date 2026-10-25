@@ -1,5 +1,6 @@
 package itmo.is.lab1.service;
 
+import itmo.is.lab1.persistence.TransactionIsolation;
 import itmo.is.lab1.dto.request.EventRequest;
 import itmo.is.lab1.model.Event;
 import itmo.is.lab1.repository.EventRepository;
