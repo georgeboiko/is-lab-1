@@ -17,10 +17,12 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import lombok.extern.java.Log;
 
 import java.net.URI;
 import java.util.List;
 
+@Log
 @Path("/events")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
@@ -35,6 +37,7 @@ public class EventResource {
     @POST
     public Response create(@Valid @NotNull EventRequest input) {
         Event event = eventService.create(input);
+        log.info(() -> "Event created: id=" + event.getId());
         updateNotifier.notify("event", "created", event.getId());
         return Response.created(URI.create("events/" + event.getId()))
                 .entity(EventResponse.from(event))
@@ -59,6 +62,7 @@ public class EventResource {
     public EventResponse update(@PathParam("id") long id,
                                 @Valid @NotNull EventRequest input) {
         Event event = eventService.update(id, input);
+        log.info(() -> "Event updated: id=" + id);
         updateNotifier.notify("event", "updated", id);
         return EventResponse.from(event);
     }
@@ -67,6 +71,7 @@ public class EventResource {
     @Path("/{id}")
     public Response delete(@PathParam("id") long id) {
         eventService.delete(id);
+        log.info(() -> "Event deleted: id=" + id);
         updateNotifier.notify("event", "deleted", id);
         return Response.noContent().build();
     }

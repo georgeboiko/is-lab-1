@@ -22,10 +22,12 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import lombok.extern.java.Log;
 
 import java.net.URI;
 import java.util.List;
 
+@Log
 @Path("/tickets")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
@@ -40,6 +42,7 @@ public class TicketResource {
     @POST
     public Response create(@Valid @NotNull TicketRequest input) {
         TicketReadModel ticket = ticketService.create(input);
+        log.info(() -> "Ticket created: id=" + ticket.id());
         updateNotifier.notify("ticket", "created", ticket.id());
         return Response.created(URI.create("tickets/" + ticket.id()))
                 .entity(TicketResponse.from(ticket))
@@ -72,6 +75,7 @@ public class TicketResource {
     public TicketResponse update(@PathParam("id") int id,
                                  @Valid @NotNull TicketRequest input) {
         TicketReadModel ticket = ticketService.update(id, input);
+        log.info(() -> "Ticket updated: id=" + id);
         updateNotifier.notify("ticket", "updated", id);
         return TicketResponse.from(ticket);
     }
@@ -80,6 +84,7 @@ public class TicketResource {
     @Path("/{id}")
     public Response delete(@PathParam("id") int id) {
         ticketService.delete(id);
+        log.info(() -> "Ticket deleted: id=" + id);
         updateNotifier.notify("ticket", "deleted", id);
         return Response.noContent().build();
     }
@@ -115,6 +120,7 @@ public class TicketResource {
                                @Valid @NotNull SellTicketRequest input) {
         TicketReadModel ticket = ticketService.sell(
                 id, input.amount(), input.personId());
+        log.info(() -> "Ticket sold: id=" + id + ", personId=" + input.personId());
         updateNotifier.notify("ticket", "updated", id);
         return TicketResponse.from(ticket);
     }
@@ -125,6 +131,7 @@ public class TicketResource {
             @PathParam("id") int id,
             @Valid @NotNull CopyTicketRequest input) {
         TicketReadModel ticket = ticketService.copyWithDiscount(id, input.discount());
+        log.info(() -> "Ticket copied: sourceId=" + id + ", id=" + ticket.id());
         updateNotifier.notify("ticket", "created", ticket.id());
         return Response.created(URI.create("tickets/" + ticket.id()))
                 .entity(TicketResponse.from(ticket))

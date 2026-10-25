@@ -17,10 +17,12 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import lombok.extern.java.Log;
 
 import java.net.URI;
 import java.util.List;
 
+@Log
 @Path("/venues")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
@@ -35,6 +37,7 @@ public class VenueResource {
     @POST
     public Response create(@Valid @NotNull VenueRequest input) {
         Venue venue = venueService.create(input);
+        log.info(() -> "Venue created: id=" + venue.getId());
         updateNotifier.notify("venue", "created", venue.getId());
         return Response.created(URI.create("venues/" + venue.getId()))
                 .entity(VenueResponse.from(venue))
@@ -59,6 +62,7 @@ public class VenueResource {
     public VenueResponse update(@PathParam("id") long id,
                                 @Valid @NotNull VenueRequest input) {
         Venue venue = venueService.update(id, input);
+        log.info(() -> "Venue updated: id=" + id);
         updateNotifier.notify("venue", "updated", id);
         return VenueResponse.from(venue);
     }
@@ -67,6 +71,7 @@ public class VenueResource {
     @Path("/{id}")
     public Response delete(@PathParam("id") long id) {
         venueService.delete(id);
+        log.info(() -> "Venue deleted: id=" + id);
         updateNotifier.notify("venue", "deleted", id);
         return Response.noContent().build();
     }

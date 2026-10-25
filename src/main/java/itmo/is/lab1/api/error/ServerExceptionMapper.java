@@ -6,9 +6,12 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;
+import lombok.extern.java.Log;
 
 import java.sql.SQLException;
+import java.util.logging.Level;
 
+@Log
 @Provider
 public class ServerExceptionMapper implements ExceptionMapper<Exception> {
 
@@ -17,6 +20,7 @@ public class ServerExceptionMapper implements ExceptionMapper<Exception> {
     @Override
     public Response toResponse(Exception exception) {
         if (isSerializationFailure(exception)) {
+            log.warning("Transaction rolled back due to a serialization conflict");
             return Response.status(Response.Status.CONFLICT)
                     .type(MediaType.APPLICATION_JSON)
                     .entity(new ApiError("Concurrent modification detected; please retry the request"))
@@ -24,9 +28,13 @@ public class ServerExceptionMapper implements ExceptionMapper<Exception> {
         }
 
         if (exception instanceof WebApplicationException webException) {
+            if (webException.getResponse().getStatus() >= 500) {
+                log.log(Level.SEVERE, "Request failed", exception);
+            }
             return webException.getResponse();
         }
 
+        log.log(Level.SEVERE, "Unhandled server error", exception);
         return Response.serverError()
                 .type(MediaType.APPLICATION_JSON)
                 .entity(new ApiError("Internal server error"))

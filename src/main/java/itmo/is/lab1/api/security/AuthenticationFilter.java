@@ -14,7 +14,9 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
 import jakarta.ws.rs.ext.Provider;
+import lombok.extern.java.Log;
 
+@Log
 @Provider
 @Priority(Priorities.AUTHENTICATION)
 public class AuthenticationFilter implements ContainerRequestFilter {
@@ -34,6 +36,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
         AuthService.AuthenticatedUser user = authService.authenticate(rawToken)
                 .orElse(null);
         if (user == null) {
+            log.warning("Authentication rejected: missing or invalid token");
             requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED)
                     .header(HttpHeaders.WWW_AUTHENTICATE, "Bearer")
                     .type(MediaType.APPLICATION_JSON)
@@ -44,6 +47,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
 
         String path = requestContext.getUriInfo().getPath();
         if (("admin".equals(path) || path.startsWith("admin/")) && user.role() != UserRole.ADMIN) {
+            log.warning(() -> "Administrator access denied: userId=" + user.id());
             requestContext.abortWith(Response.status(Response.Status.FORBIDDEN)
                     .type(MediaType.APPLICATION_JSON)
                     .entity(new ApiError("Administrator role is required"))

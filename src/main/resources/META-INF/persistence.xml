@@ -7,5 +7,8 @@
     <persistence-unit name="lab1" transaction-type="JTA">
         <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
         <jta-data-source>jdbc/lab1</jta-data-source>
+        <properties>
+            <property name="eclipselink.logging.parameters" value="false"/>
+        </properties>
     </persistence-unit>
 </persistence>

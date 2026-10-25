@@ -17,9 +17,11 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.SecurityContext;
+import lombok.extern.java.Log;
 
 import java.util.List;
 
+@Log
 @Path("/admin/users")
 @Produces(MediaType.APPLICATION_JSON)
 public class AdminUserResource {
@@ -42,7 +44,10 @@ public class AdminUserResource {
                                    @PathParam("id") long id,
                                    @Valid @NotNull UpdateUserRoleRequest input) {
         UserPrincipal principal = (UserPrincipal) securityContext.getUserPrincipal();
-        return toResponse(adminUserService.updateRole(principal.id(), id, input));
+        UserAccount user = adminUserService.updateRole(principal.id(), id, input);
+        log.info(() -> "User role set: actorId=" + principal.id()
+                + ", userId=" + user.getId() + ", role=" + user.getRole());
+        return toResponse(user);
     }
 
     private UserResponse toResponse(UserAccount user) {

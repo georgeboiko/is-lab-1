@@ -20,7 +20,9 @@ import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
+import lombok.extern.java.Log;
 
+@Log
 @Path("/auth")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
@@ -33,6 +35,7 @@ public class AuthResource {
     @Path("/register")
     public Response register(@Valid @NotNull CredentialsRequest input) {
         AuthService.LoginResult result = authService.register(input);
+        log.info(() -> "User registered: id=" + result.userId());
         return Response.status(Response.Status.CREATED)
                 .entity(toResponse(result))
                 .build();
@@ -41,14 +44,24 @@ public class AuthResource {
     @POST
     @Path("/login")
     public AuthResponse login(@Valid @NotNull CredentialsRequest input) {
-        return toResponse(authService.login(input));
+        try {
+            AuthService.LoginResult result = authService.login(input);
+            log.info(() -> "User logged in: id=" + result.userId());
+            return toResponse(result);
+        } catch (SecurityException exception) {
+            log.warning("Login failed: invalid credentials");
+            throw exception;
+        }
     }
 
     @POST
     @Path("/logout")
     public Response logout(
-            @HeaderParam(HttpHeaders.AUTHORIZATION) String authorization) {
+            @HeaderParam(HttpHeaders.AUTHORIZATION) String authorization,
+            @Context SecurityContext securityContext) {
         authService.logout(BearerTokens.fromHeader(authorization));
+        UserPrincipal principal = (UserPrincipal) securityContext.getUserPrincipal();
+        log.info(() -> "User logged out: id=" + principal.id());
         return Response.noContent().build();
     }
 

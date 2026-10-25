@@ -17,10 +17,12 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import lombok.extern.java.Log;
 
 import java.net.URI;
 import java.util.List;
 
+@Log
 @Path("/persons")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
@@ -35,6 +37,7 @@ public class PersonResource {
     @POST
     public Response create(@Valid @NotNull PersonRequest input) {
         Person person = personService.create(input);
+        log.info(() -> "Person created: id=" + person.getId());
         updateNotifier.notify("person", "created", person.getId());
         return Response.created(URI.create("persons/" + person.getId()))
                 .entity(PersonResponse.from(person))
@@ -59,6 +62,7 @@ public class PersonResource {
     public PersonResponse update(@PathParam("id") long id,
                                  @Valid @NotNull PersonRequest input) {
         Person person = personService.update(id, input);
+        log.info(() -> "Person updated: id=" + id);
         updateNotifier.notify("person", "updated", id);
         return PersonResponse.from(person);
     }
@@ -67,6 +71,7 @@ public class PersonResource {
     @Path("/{id}")
     public Response delete(@PathParam("id") long id) {
         personService.delete(id);
+        log.info(() -> "Person deleted: id=" + id);
         updateNotifier.notify("person", "deleted", id);
         return Response.noContent().build();
     }
