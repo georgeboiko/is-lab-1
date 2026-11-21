@@ -13,7 +13,7 @@ repositories {
     mavenCentral()
 }
 
-val postgresqlDriver = configurations.create("postgresqlDriver")
+val glassfishJdbcLibs = configurations.create("glassfishJdbcLibs")
 
 dependencies {
     compileOnly("jakarta.platform:jakarta.jakartaee-web-api:10.0.0")
@@ -21,7 +21,8 @@ dependencies {
     compileOnly("org.projectlombok:lombok:1.18.48")
     annotationProcessor("org.projectlombok:lombok:1.18.48")
 
-    add(postgresqlDriver.name, "org.postgresql:postgresql:42.7.10")
+    add(glassfishJdbcLibs.name, "org.postgresql:postgresql:42.7.10")
+    add(glassfishJdbcLibs.name, "com.alibaba:druid:1.2.28")
 
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
@@ -38,7 +39,8 @@ tasks.war {
     archiveFileName = "lab1.war"
 }
 
-tasks.register<Copy>("copyPostgresqlDriver") {
-    from(postgresqlDriver)
+tasks.register<Sync>("copyGlassfishJdbcLibs") {
+    from(glassfishJdbcLibs)
+    include("postgresql-*.jar", "druid-*.jar")
     into(layout.buildDirectory.dir("glassfish/lib"))
 }
